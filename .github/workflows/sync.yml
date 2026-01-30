@@ -1,14 +1,30 @@
 name: Sync Fork
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '0 * * * *' # 每小時執行一次
   workflow_dispatch: # 允許手動觸發
+
 jobs:
-  sync:
+  sync_latest_from_upstream:
     runs-on: ubuntu-latest
+    name: Sync latest commits from upstream repo
+
     steps:
-      - uses: tgymnich/fork-sync@v1.1
-        with:
-          base: main
-          head: main
-          auto_approve: true
+    # 步驟 1：檢出你的代碼
+    - name: Checkout target repo
+      uses: actions/checkout@v4
+      with:
+        # 這裡必須設為 true，Action 才能推回更新
+        persist-credentials: true
+
+    # 步驟 2：執行同步
+    - name: Sync upstream changes
+      uses: aormsby/Fork-Sync-Action@v3.4
+      with:
+        upstream_sync_repo: openclaw/openclaw  # 源頭 Repo
+        upstream_sync_branch: main            # 源頭分支
+        target_sync_branch: main              # 你的分支
+        target_repo_token: ${{ secrets.GITHUB_TOKEN }} # 自動獲取權限
+
+        # 如果遇到衝突要怎麼處理 (可選)
+        test_mode: false
